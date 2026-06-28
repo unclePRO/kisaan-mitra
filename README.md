@@ -1,6 +1,6 @@
 # Kisaan Mitra - Your AI Farmer Friend
 
-Kisaan Mitra (Farmer's Friend) is an AI-powered, mobile-first web application designed to assist local farmers in Banda, Uttar Pradesh, and beyond. It provides hyper-localized farming advice, instant crop disease diagnosis via camera upload, and real-time market (Mandi) and weather data.
+Kisaan Mitra (Farmer's Friend) is an AI-powered, mobile-first web application designed to assist local farmers and beyond. It provides hyper-localized farming advice, instant crop disease diagnosis via camera upload, and real-time market (Mandi) and weather data.
 
 ## Key Features
 
