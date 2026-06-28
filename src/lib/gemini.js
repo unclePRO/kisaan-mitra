@@ -896,7 +896,7 @@ const startNewChat = (history = []) => {
  *   const reply = await sendMessage(chat, "Gehu mein aphid lag gaya");
  *   console.log(reply);
  */
-const sendMessage = async (chatSession, userMessage) => {
+const sendMessage = async (chatSession, userMessage, imageBase64 = null, mimeType = "image/jpeg") => {
 
   /* ── [G.1] Input Validation ──────────────────────────────────── */
 
@@ -907,14 +907,11 @@ const sendMessage = async (chatSession, userMessage) => {
     );
   }
 
-  if (
-    !userMessage           ||
-    typeof userMessage !== "string" ||
-    userMessage.trim() === ""
-  ) {
+  const hasText = userMessage && typeof userMessage === "string" && userMessage.trim() !== "";
+  
+  if (!hasText && !imageBase64) {
     throw new Error(
-      "[KisaanMitra] sendMessage(): userMessage must be a " +
-      "non-empty string."
+      "[KisaanMitra] sendMessage(): You must provide either a text message or an image."
     );
   }
 
@@ -927,10 +924,28 @@ const sendMessage = async (chatSession, userMessage) => {
    */
 
   try {
+    
+    // Default payload is just text
+    let messagePayload = hasText ? userMessage.trim() : "Please analyze this image.";
+
+    // If an image is provided, package it into an array for the new SDK
+    if (imageBase64) {
+      messagePayload = [
+        hasText ? userMessage.trim() : "Please analyze this image related to my crop/soil.",
+        {
+          inlineData: {
+            data: imageBase64,
+            mimeType: mimeType
+          }
+        }
+      ];
+    }
 
     const response = await chatSession.sendMessage({
-      message: userMessage.trim(),
+      message: messagePayload,
     });
+
+    /* ── [G.3] Safety Block Detection ─────────────────────────── */
 
     /* ── [G.3] Safety Block Detection ─────────────────────────── */
     /*
