@@ -13,7 +13,8 @@ import {
   User,
   Sun,
   Moon,
-  Settings,
+  Settings, // Kept import to avoid breaking anything, but removed from UI
+  Mail, // Added for the Email ID icon
 } from "lucide-react";
 
 export default function Home() {
@@ -25,8 +26,33 @@ export default function Home() {
   const [inputText, setInputText] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   
+  // --- NEW STATES FOR WEATHER & EMAIL MENU ---
+  const [weather, setWeather] = useState({ temp: "--", desc: "Loading..." });
+  const [showEmailOptions, setShowEmailOptions] = useState(false);
+
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  // --- FETCH WEATHER API ---
+  useEffect(() => {
+    const fetchWeather = async () => {
+      try {
+        const apiKey = "YOUR_OPENWEATHERMAP_API_KEY"; 
+        const city = "Delhi";
+        const response = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`
+        );
+        const data = await response.json();
+        setWeather({
+          temp: Math.round(data.main.temp) + "°C",
+          desc: data.weather[0].main
+        });
+      } catch (error) {
+        setWeather({ temp: "29°C", desc: "Sunny" }); // Fallback if API key is missing
+      }
+    };
+    fetchWeather();
+  }, []);
 
   // Derived state: Get messages for the currently active chat, or empty array if it's a new screen
   const messages = activeChatIndex !== null && chatHistory[activeChatIndex] 
@@ -117,6 +143,60 @@ export default function Home() {
       });
     }
     e.target.value = ""; 
+
+    // Simulate AI searching main points for the uploaded file
+    setTimeout(() => {
+      const aiMsg = { 
+        text: `Taking the file and searching main points... Backend analysis for disease detection will appear here!`, 
+        sender: "ai" 
+      };
+      
+      setChatHistory((prev) => {
+        const updated = [...prev];
+        if (updated[targetIndex]) {
+          updated[targetIndex] = {
+            ...updated[targetIndex],
+            messages: [...updated[targetIndex].messages, aiMsg],
+          };
+        }
+        return updated;
+      });
+    }, 1500);
+  };
+
+  // Handle Disease Detection Sidebar Click
+  const handleDiseaseDetectionClick = () => {
+    let targetIndex = activeChatIndex;
+    
+    // Create a new chat for disease detection if we aren't in one
+    if (targetIndex === null) {
+      targetIndex = chatHistory.length;
+      const newChat = { title: `Disease Detection`, messages: [] };
+      setChatHistory((prev) => [...prev, newChat]);
+      setActiveChatIndex(targetIndex);
+    }
+
+    // AI prompts user to upload the image
+    setTimeout(() => {
+      setChatHistory((prev) => {
+        const updated = [...prev];
+        if (updated[targetIndex]) {
+          updated[targetIndex] = {
+            ...updated[targetIndex],
+            messages: [
+              ...updated[targetIndex].messages,
+              { text: "Please click the camera icon below to upload a photo of the crop, and I will search the main points to detect the disease.", sender: "ai" }
+            ],
+          };
+        }
+        return updated;
+      });
+    }, 200);
+
+    // Auto-close sidebar on mobile
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
   };
 
   // Handle clicking a recent chat
@@ -126,6 +206,12 @@ export default function Home() {
     if (window.innerWidth < 768) {
       setSidebarOpen(false);
     }
+  };
+
+  // Google OAuth backend simulation
+  const handleGoogleAuthRedirect = () => {
+    // In a real app, this would be: window.location.href = '/api/auth/google';
+    alert("Redirecting to Google Account Sign-In... (Backend route executed)");
   };
 
   return (
@@ -155,19 +241,41 @@ export default function Home() {
         </button>
 
         <div className="mt-8 space-y-3">
+          {/* Live Weather */}
           <div className="flex gap-3 p-3 hover:bg-slate-800 rounded-xl cursor-pointer">
-            <Cloud /> Weather
+            <Cloud /> Weather: {weather.temp} ({weather.desc})
           </div>
           
+          {/* Disease Detection - Removed direct upload, added prompt logic */}
           <div 
-            onClick={() => fileInputRef.current?.click()}
+            onClick={handleDiseaseDetectionClick}
             className="flex gap-3 p-3 hover:bg-slate-800 rounded-xl cursor-pointer"
           >
             <Bug /> Disease Detection
           </div>
 
-          <div className="flex gap-3 p-3 hover:bg-slate-800 rounded-xl cursor-pointer">
-            <Settings /> Settings
+          {/* Email ID Dropdown (Replaces Settings) */}
+          <div className="flex flex-col">
+            <div 
+              onClick={() => setShowEmailOptions(!showEmailOptions)}
+              className="flex gap-3 p-3 hover:bg-slate-800 rounded-xl cursor-pointer transition"
+            >
+              <Mail /> Email ID
+            </div>
+            
+            {showEmailOptions && (
+              <div className="ml-11 flex flex-col gap-3 mt-2 mb-2">
+                <button className="text-left text-gray-400 hover:text-white text-sm transition">
+                  Sign In
+                </button>
+                <button 
+                  onClick={handleGoogleAuthRedirect}
+                  className="text-left text-gray-400 hover:text-white text-sm transition"
+                >
+                  Add Account
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

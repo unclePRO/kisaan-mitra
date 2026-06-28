@@ -33,26 +33,49 @@ export default function UnifiedCropScan() {
     videoRef.current.srcObject.getTracks().forEach(t => t.stop());
   };
 
-  // --- ANALYZE LOGIC ---
-  const handleAnalyze = () => {
+  // --- API LOGIC (UPDATED) ---
+  const handleAnalyze = async () => {
     setIsScanning(true);
     setScanResult(null);
-    setTimeout(() => {
-      // Logic for randomizing a response type
-      const isCrop = Math.random() > 0.5;
-      setScanResult(isCrop ? {
-        type: "crop",
-        title: "Pest Detected: Aphids",
-        details: "Infestation level: 12%. Apply Neem Oil solution within 24 hours.",
-        icon: <Bug className="text-red-500" />
-      } : {
-        type: "land",
-        title: "Irrigation Status: Low",
-        details: "Soil moisture is at 22%. Water requirement: 5-10 liters per square meter.",
-        icon: <Droplets className="text-blue-500" />
+
+    try {
+      // 1. Send the image to your backend (e.g., a Python FastAPI or Flask server)
+      const response = await fetch('http://localhost:5000/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // We send the base64 image string to the server
+        body: JSON.stringify({ image: selectedImage }),
       });
+
+      if (!response.ok) {
+        throw new Error('Backend failed to respond');
+      }
+
+      // 2. Wait for the real AI result from your backend
+      const data = await response.json();
+
+      // 3. Display the real data
+      setScanResult({
+        type: data.type,
+        title: data.title,
+        details: data.details,
+        icon: data.type === "crop" ? <Bug className="text-red-500" /> : <Droplets className="text-blue-500" />
+      });
+
+    } catch (error) {
+      console.error("API Error:", error);
+      // Fallback message if your backend isn't running yet
+      setScanResult({
+        type: "error",
+        title: "Backend Disconnected",
+        details: "The frontend is ready! Please start your backend server on port 5000 to process this image.",
+        icon: <AlertCircle className="text-yellow-500" />
+      });
+    } finally {
       setIsScanning(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -91,7 +114,7 @@ export default function UnifiedCropScan() {
         )}
 
         {/* Loading */}
-        {isScanning && <div className="py-8 animate-pulse text-[#10B981] font-bold">Scanning...</div>}
+        {isScanning && <div className="py-8 animate-pulse text-[#10B981] font-bold">Sending to Backend Server...</div>}
 
         {/* Result */}
         {scanResult && (
