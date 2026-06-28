@@ -1,118 +1,313 @@
-'use client';
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Leaf, MessageSquare, Plus, Settings, Sun, CloudRain, TrendingUp, 
-  Landmark, User, Send, Mic, Image as ImageIcon, Copy, ThumbsUp, 
-  ThumbsDown, Volume2, Menu, X, ChevronDown, CheckCircle2 
-} from 'lucide-react';
+"use client";
 
-export default function KisaanMitraApp() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [messages, setMessages] = useState([
-    { id: 1, sender: 'ai', text: "Hello! How can I help your farming today?" }
-  ]);
-  const [input, setInput] = useState("");
+import { useState, useRef, useEffect } from "react";
+import {
+  Menu,
+  X,
+  Send,
+  Mic,
+  Image as ImageIcon,
+  Cloud,
+  Wheat,
+  Bug,
+  User,
+  Sun,
+  Moon,
+  Settings,
+} from "lucide-react";
+
+export default function Home() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // --- UPDATED STATE FOR REAL CHAT HISTORY ---
+  const [chatHistory, setChatHistory] = useState([]); // Stores all chats: [{ title: 'Chat 1', messages: [...] }]
+  const [activeChatIndex, setActiveChatIndex] = useState(null); // Tracks which chat is currently open
+  const [inputText, setInputText] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  
+  const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  // Derived state: Get messages for the currently active chat, or empty array if it's a new screen
+  const messages = activeChatIndex !== null && chatHistory[activeChatIndex] 
+    ? chatHistory[activeChatIndex].messages 
+    : [];
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Handle sending a text message
+  const handleSend = () => {
+    if (!inputText.trim()) return;
+
+    const currentText = inputText;
+    setInputText("");
+    
+    const userMsg = { text: currentText, sender: "user" };
+    let targetIndex = activeChatIndex;
+
+    // If starting a brand new chat, create it in the history
+    if (targetIndex === null) {
+      targetIndex = chatHistory.length;
+      const newChat = { title: `Chat ${targetIndex + 1}`, messages: [userMsg] };
+      setChatHistory((prev) => [...prev, newChat]);
+      setActiveChatIndex(targetIndex);
+    } else {
+      // If continuing an existing chat, append the message
+      setChatHistory((prev) => {
+        const updated = [...prev];
+        updated[targetIndex] = {
+          ...updated[targetIndex],
+          messages: [...updated[targetIndex].messages, userMsg],
+        };
+        return updated;
+      });
+    }
+
+    // Simulate AI response
+    setTimeout(() => {
+      const aiMsg = { 
+        text: `Here is a simulated response to: "${currentText}". In a real app, this connects to your backend API!`, 
+        sender: "ai" 
+      };
+      
+      setChatHistory((prev) => {
+        const updated = [...prev];
+        if (updated[targetIndex]) {
+          updated[targetIndex] = {
+            ...updated[targetIndex],
+            messages: [...updated[targetIndex].messages, aiMsg],
+          };
+        }
+        return updated;
+      });
+    }, 1000);
+  };
+
+  // Handle Enter key press
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleSend();
+    }
+  };
+
+  // Handle Image Upload Selection
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const userMsg = { text: `📎 Image selected: ${file.name}`, sender: "user" };
+    let targetIndex = activeChatIndex;
+
+    if (targetIndex === null) {
+      targetIndex = chatHistory.length;
+      const newChat = { title: `Chat ${targetIndex + 1}`, messages: [userMsg] };
+      setChatHistory((prev) => [...prev, newChat]);
+      setActiveChatIndex(targetIndex);
+    } else {
+      setChatHistory((prev) => {
+        const updated = [...prev];
+        updated[targetIndex] = {
+          ...updated[targetIndex],
+          messages: [...updated[targetIndex].messages, userMsg],
+        };
+        return updated;
+      });
+    }
+    e.target.value = ""; 
+  };
+
+  // Handle clicking a recent chat
+  const handleRecentChatClick = (index) => {
+    setActiveChatIndex(index);
+    // Auto-close sidebar on mobile devices for better UX
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  };
 
   return (
-    <div className="flex h-screen bg-[#111827] text-[#f9fafb] font-sans overflow-hidden">
-      {/* Sidebar */}
-      <motion.aside 
-        initial={{ width: 280 }}
-        animate={{ width: sidebarOpen ? 280 : 0 }}
-        className="bg-[#0b1220] border-r border-[#1f2937] flex flex-col h-full"
+    <div className="fixed inset-0 flex h-screen w-screen bg-slate-950 text-white overflow-hidden">
+      {/* Mobile Menu */}
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-slate-800 rounded-lg"
       >
-        <div className="p-6 flex items-center gap-3">
-          <div className="bg-green-600 p-2 rounded-lg"><Leaf size={24} /></div>
-          <h1 className="font-bold text-xl">Kisaan Mitra</h1>
-        </div>
-        
-        <div className="px-4 mb-6">
-          <button className="w-full bg-green-600 hover:bg-green-700 p-3 rounded-xl flex items-center justify-center gap-2 font-medium transition-all">
-            <Plus size={20} /> New Chat
-          </button>
-        </div>
+        {sidebarOpen ? <X /> : <Menu />}
+      </button>
 
-        <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
-          <p className="text-xs text-[#9ca3af] uppercase font-bold px-2 mb-2">Recent</p>
-          {['Best fertilizer for wheat', 'Tomato disease', 'Weather tomorrow'].map((item, i) => (
-            <button key={i} className="w-full text-left p-3 rounded-lg hover:bg-[#1f2937] text-sm text-[#9ca3af] hover:text-white transition">
-              {item}
-            </button>
-          ))}
-        </nav>
-      </motion.aside>
+      {/* Sidebar */}
+      <aside
+        className={`fixed md:relative z-40 h-full w-72 bg-slate-900 border-r border-slate-800 p-5 transition-transform duration-300 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
+        <h1 className="text-3xl font-bold text-green-500">🌾 Kisaan Mitra</h1>
+        <p className="text-gray-400 mt-2">Your Farming Assistant</p>
 
-      {/* Main Area */}
-      <main className="flex-1 flex flex-col relative">
-        {/* Header */}
-        <header className="h-[70px] border-b border-[#1f2937] flex items-center justify-between px-6 bg-[#111827]">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)}><Menu size={20} /></button>
-            <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center">🤖</div>
-            <span className="font-semibold">Kisaan Mitra AI</span>
-            <CheckCircle2 size={16} className="text-green-500" />
+        <button 
+          onClick={() => setActiveChatIndex(null)} // Clear screen for a new chat
+          className="w-full mt-6 bg-green-600 py-3 rounded-xl hover:bg-green-700 transition"
+        >
+          + New Chat
+        </button>
+
+        <div className="mt-8 space-y-3">
+          <div className="flex gap-3 p-3 hover:bg-slate-800 rounded-xl cursor-pointer">
+            <Cloud /> Weather
           </div>
-          <div className="flex items-center gap-4">
-            <button className="p-2 hover:bg-[#1f2937] rounded-full"><Sun size={20} /></button>
-            <div className="w-8 h-8 rounded-full bg-[#1f2937] flex items-center justify-center border border-[#374151]">U</div>
+          
+          <div 
+            onClick={() => fileInputRef.current?.click()}
+            className="flex gap-3 p-3 hover:bg-slate-800 rounded-xl cursor-pointer"
+          >
+            <Bug /> Disease Detection
+          </div>
+
+          <div className="flex gap-3 p-3 hover:bg-slate-800 rounded-xl cursor-pointer">
+            <Settings /> Settings
+          </div>
+        </div>
+
+        <div className="mt-10">
+          <p className="text-gray-400 mb-3">Recent Chats</p>
+          
+          {/* Dynamically render actual chat history */}
+          {chatHistory.length === 0 && (
+            <p className="text-slate-600 text-sm italic">No recent chats yet</p>
+          )}
+          {chatHistory.map((chat, i) => (
+            <div 
+              key={i} 
+              onClick={() => handleRecentChatClick(i)} 
+              className={`mb-2 cursor-pointer transition-colors ${
+                activeChatIndex === i ? "text-green-400 font-bold" : "text-gray-300 hover:text-white"
+              }`}
+            >
+              {chat.title}
+            </div>
+          ))}
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="flex flex-col flex-1 h-full overflow-hidden">
+        {/* Header */}
+        <header className="h-16 border-b border-slate-800 flex items-center justify-between px-6 bg-slate-900 shrink-0">
+          <div>
+            <h2 className="text-xl font-bold">Kisaan Mitra AI</h2>
+            <p className="text-green-400 text-sm">Smart Farming Assistant</p>
+          </div>
+          <div className="flex gap-4">
+            <Sun className="cursor-pointer hover:text-green-400 transition" />
+            <Moon className="cursor-pointer hover:text-green-400 transition" />
+            <User className="cursor-pointer hover:text-green-400 transition" />
           </div>
         </header>
 
         {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-[850px] mx-auto space-y-8">
-            <AnimatePresence>
-              {messages.map((m) => (
-                <motion.div 
-                  key={m.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex gap-4 ${m.sender === 'user' ? 'justify-end' : ''}`}
-                >
-                  {m.sender === 'ai' && <div className="w-8 h-8 rounded-full bg-[#1f2937] flex items-center justify-center">🤖</div>}
-                  <div className={`p-5 rounded-[18px] max-w-[80%] ${
-                    m.sender === 'user' ? 'bg-green-600' : 'bg-[#1f2937] border border-[#374151]'
-                  }`}>
-                    {m.text}
-                    {m.sender === 'ai' && (
-                      <div className="flex gap-4 mt-4 pt-4 border-t border-[#374151]">
-                        <Copy size={16} className="cursor-pointer hover:text-green-500" />
-                        <ThumbsUp size={16} className="cursor-pointer hover:text-green-500" />
+        <main className="flex-1 overflow-y-auto p-6 relative flex flex-col">
+          {/* Background */}
+          <div
+            className="absolute inset-0 opacity-5 pointer-events-none"
+            style={{
+              backgroundImage: "url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854')",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          />
+
+          <div className="relative z-10 max-w-4xl mx-auto w-full flex-1 flex flex-col">
+            
+            {/* Show Welcome Screen ONLY if there are no messages */}
+            {messages.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-center py-16">
+                <h1 className="text-5xl font-bold text-green-500">🌾 Kisaan Mitra AI</h1>
+                <p className="text-gray-400 mt-4 text-lg">
+                  Your intelligent farming assistant. How can I help you today?
+                </p>
+              </div>
+            ) : (
+              /* Render Messages */
+              <div className="space-y-6 pb-6">
+                {messages.map((msg, index) => (
+                  <div 
+                    key={index} 
+                    className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start gap-4"}`}
+                  >
+                    {/* AI Avatar */}
+                    {msg.sender === "ai" && (
+                      <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center shrink-0">
+                        🌾
                       </div>
                     )}
+                    
+                    {/* Message Bubble */}
+                    <div 
+                      className={`px-5 py-3 rounded-2xl max-w-2xl ${
+                        msg.sender === "user" 
+                          ? "bg-green-600 text-white" 
+                          : "bg-slate-800 border border-slate-700 text-gray-100"
+                      }`}
+                    >
+                      {msg.text}
+                    </div>
                   </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+                ))}
+                {/* Invisible div to scroll to */}
+                <div ref={messagesEndRef} />
+              </div>
+            )}
           </div>
-        </div>
+        </main>
 
         {/* Input Area */}
-        <div className="p-6 bg-[#111827]">
-          <div className="max-w-[850px] mx-auto">
-            <div className="flex gap-2 mb-4">
-              {['🌾 Crop Advice', '☀ Weather', '💰 Market Prices', '🏛 Schemes'].map(chip => (
-                <button key={chip} className="px-4 py-1.5 rounded-full bg-[#1f2937] border border-[#374151] text-xs hover:bg-[#2d3748] transition">
-                  {chip}
-                </button>
-              ))}
-            </div>
-            <div className="relative flex items-center h-[64px] bg-[#1f2937] border border-[#374151] rounded-[30px] px-6">
-              <ImageIcon className="text-[#9ca3af] cursor-pointer hover:text-white" />
-              <input 
-                className="flex-1 bg-transparent px-4 outline-none" 
-                placeholder="Ask anything about crops..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-              />
-              <button className="bg-green-600 p-2 rounded-full hover:bg-green-500 transition">
-                <Send size={18} />
-              </button>
-            </div>
+        <div className="border-t border-slate-800 p-4 bg-slate-900 shrink-0">
+          <div className="flex items-center gap-3 bg-slate-800 rounded-full px-5 py-4 max-w-4xl mx-auto focus-within:ring-1 focus-within:ring-green-500 transition">
+            
+            {/* Hidden File Input */}
+            <input 
+              type="file" 
+              accept="image/*" 
+              className="hidden" 
+              ref={fileInputRef} 
+              onChange={handleImageUpload}
+            />
+            
+            {/* Camera Icon Triggers Hidden Input */}
+            <ImageIcon 
+              onClick={() => fileInputRef.current?.click()}
+              className="text-gray-400 cursor-pointer hover:text-white transition shrink-0" 
+            />
+
+            {/* Chat Input */}
+            <input
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="flex-1 bg-transparent outline-none placeholder-gray-500 min-w-0"
+              placeholder="Ask anything about farming..."
+            />
+
+            {/* Mic Icon Toggles Recording State */}
+            <Mic 
+              onClick={() => setIsRecording(!isRecording)}
+              className={`cursor-pointer transition shrink-0 ${isRecording ? "text-red-500 animate-pulse" : "text-gray-400 hover:text-white"}`} 
+            />
+
+            {/* Send Button */}
+            <button 
+              onClick={handleSend}
+              disabled={!inputText.trim()}
+              className="bg-green-600 p-2 rounded-full hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            >
+              <Send size={18} />
+            </button>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
