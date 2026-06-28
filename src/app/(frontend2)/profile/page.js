@@ -80,7 +80,6 @@ export default function UserProfile() {
         avatar: prev.avatar || session.user.image 
       }));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, userData.email]);
 
   // --- CAMERA STATE & REFS ---
