@@ -1,12 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { 
   AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, 
   CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell 
 } from "recharts";
 
 export default function Dashboard() {
+  const { data: session } = useSession();
+
   // ── SATELLITE & WEATHER DATA ──
   const [weather, setWeather] = useState({
     temp: 28,
@@ -92,16 +95,30 @@ export default function Dashboard() {
     setNewTask("");
   };
 
-  const handleSendChat = (e) => {
+  // ── INTEGRATED GEMINI CHAT HANDLER ──
+  const handleSendChat = async (e) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
-    const newMessages = [...chatMessages, { role: "user", text: chatInput }];
-    setChatMessages(newMessages);
-    setChatInput("");
+    
+    const userMessage = chatInput;
+    setChatInput(""); 
+    setChatMessages((prev) => [...prev, { role: "user", text: userMessage }]);
 
-    setTimeout(() => {
-      setChatMessages([...newMessages, { role: "assistant", text: "Analyzing your soil and local mandi patterns... I recommend monitoring the upcoming Wednesday rain shower to schedule pesticide spraying accordingly." }]);
-    }, 1000);
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMessage, chatId: "dashboard-quick-chat" }) 
+      });
+
+      const data = await res.json();
+      
+      if (res.ok) {
+        setChatMessages((prev) => [...prev, { role: "assistant", text: data.reply }]);
+      }
+    } catch (error) {
+      console.error("Failed to get AI response:", error);
+    }
   };
 
   const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444'];
@@ -156,13 +173,15 @@ export default function Dashboard() {
           </nav>
         </div>
 
-        {/* Footer profile snippet */}
+        {/* Footer profile snippet - NOW DYNAMIC WITH NEXTAUTH */}
         <div className="p-4 border-t border-[#64748B]/15 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-[#64748B]/20 flex items-center justify-center font-bold text-xs text-[#F1F5F9]">RM</div>
+            <div className="w-8 h-8 rounded-full bg-[#10B981]/20 flex items-center justify-center font-bold text-xs text-[#10B981]">
+              {session?.user?.name?.charAt(0) || "U"}
+            </div>
             <div>
-              <p className="text-[11px] font-bold">Ramesh Patel</p>
-              <p className="text-[9px] text-[#64748B]">Village: Rampur, Gujarat</p>
+              <p className="text-[11px] font-bold truncate max-w-[120px]">{session?.user?.name || "Guest Farmer"}</p>
+              <p className="text-[9px] text-[#64748B] truncate max-w-[120px]">{session?.user?.email}</p>
             </div>
           </div>
           <button className="text-[#64748B] hover:text-red-400">
@@ -189,7 +208,6 @@ export default function Dashboard() {
         {/* ── TAB CONTENT: OVERVIEW ── */}
         {activeTab === "overview" && (
           <div className="space-y-6">
-            {/* Quick stats ribbon */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="p-5 rounded-2xl bg-[#141E30] border border-[#64748B]/15">
                 <span className="text-[10px] uppercase font-extrabold tracking-wider text-[#64748B]">Soil Health</span>
@@ -222,7 +240,6 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Satellite/Weather Monitoring Widget */}
               <div className="p-6 rounded-2xl bg-[#141E30] border border-[#64748B]/15 flex flex-col justify-between">
                 <div>
                    <div className="flex justify-between items-center mb-4">
@@ -249,7 +266,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Weekly Weather Forecast Bar Chart */}
               <div className="p-6 rounded-2xl bg-[#141E30] border border-[#64748B]/15 lg:col-span-2 flex flex-col justify-between">
                 <div>
                    <h3 className="text-sm font-bold uppercase tracking-wider mb-2">7-Day Precipitation & Temperature Forecast</h3>
@@ -285,7 +301,6 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Smart Crop Selector Block */}
             <div className="p-6 rounded-2xl bg-[#141E30] border border-[#64748B]/15 space-y-5">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
@@ -335,7 +350,6 @@ export default function Dashboard() {
         {activeTab === "analytics" && (
           <div className="space-y-6">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Cumulative Monthly Yield */}
                 <div className="p-6 rounded-2xl bg-[#141E30] border border-[#64748B]/15">
                    <h3 className="text-sm font-bold uppercase tracking-wider mb-2">Monthly Aggregate Yield (Quintals)</h3>
                    <p className="text-[10px] text-[#64748B] mb-6">Total calculated yields over seasonal production intervals.</p>
@@ -352,7 +366,6 @@ export default function Dashboard() {
                    </div>
                 </div>
 
-                {/* Expenses breakdown */}
                 <div className="p-6 rounded-2xl bg-[#141E30] border border-[#64748B]/15 flex flex-col justify-between">
                    <div>
                      <h3 className="text-sm font-bold uppercase tracking-wider mb-2">Seasonal Operational Cost Allocation</h3>
@@ -388,7 +401,6 @@ export default function Dashboard() {
                 </div>
              </div>
 
-             {/* Financial Advisory Dashboard Alert Banner */}
              <div className="p-6 rounded-2xl bg-gradient-to-r from-emerald-900/40 to-[#141E30] border border-emerald-500/20 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div>
                   <span className="text-[10px] font-extrabold tracking-widest text-emerald-400 uppercase">Kisan Credit Card (KCC) Status</span>
@@ -408,7 +420,6 @@ export default function Dashboard() {
         {activeTab === "mandi" && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Local Mandi Prices Line Chart */}
               <div className="p-6 rounded-2xl bg-[#141E30] border border-[#64748B]/15">
                 <h3 className="text-sm font-bold uppercase tracking-wider mb-2">Regional Mandi Pricing (₹ / Quintal)</h3>
                 <p className="text-[10px] text-[#64748B] mb-6">Compare Cotton versus Paddy weekly selling prices in your district.</p>
@@ -426,7 +437,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Mandi nearby list */}
               <div className="p-6 rounded-2xl bg-[#141E30] border border-[#64748B]/15 flex flex-col justify-between">
                 <div>
                    <h3 className="text-sm font-bold uppercase tracking-wider mb-2">Nearby Agricultural Produce Market Committees</h3>
@@ -470,7 +480,6 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Gov portal scheme announcement */}
             <div className="p-6 rounded-2xl bg-[#141E30] border border-[#64748B]/15 flex flex-col md:flex-row items-center justify-between gap-6">
               <div>
                  <span className="text-[10px] uppercase font-extrabold tracking-widest text-[#F59E0B]">e-NAM Integration Update</span>
@@ -493,7 +502,6 @@ export default function Dashboard() {
                 <h3 className="text-sm font-bold uppercase tracking-wider mb-2">Automated Agronomic Task Schedulers</h3>
                 <p className="text-[10px] text-[#64748B] mb-6">Create, edit and complete season checklists derived from soil sensor triggers.</p>
                 
-                {/* To-do list display */}
                 <div className="space-y-3 mb-6">
                   {todoList.map((item) => (
                      <div 
@@ -516,7 +524,6 @@ export default function Dashboard() {
                   ))}
                 </div>
 
-                {/* Add new task form */}
                 <form onSubmit={handleAddTodo} className="flex gap-2">
                    <input 
                      type="text" 
