@@ -1,379 +1,311 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
-  Menu,
-  X,
-  Send,
-  Mic,
-  Image as ImageIcon,
-  Cloud,
-  Wheat,
-  Bug,
-  User,
-  Sun,
-  Moon,
-  Settings, // Kept import to avoid breaking anything, but removed from UI
-  Mail, // Added for the Email ID icon
+  Menu, X, Send, Mic, Image as ImageIcon, 
+  Cloud, Bug, User, ChevronLeft
 } from "lucide-react";
+import Link from "next/link";
 
-export default function Home() {
+export default function ChatPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  // --- STATE ---
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  
-  // --- UPDATED STATE FOR REAL CHAT HISTORY ---
-  const [chatHistory, setChatHistory] = useState([]); // Stores all chats: [{ title: 'Chat 1', messages: [...] }]
-  const [activeChatIndex, setActiveChatIndex] = useState(null); // Tracks which chat is currently open
+  const [recentChats, setRecentChats] = useState([]);
+  const [currentChatId, setCurrentChatId] = useState("");
+  const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
-  
-  // --- NEW STATES FOR WEATHER & EMAIL MENU ---
-  const [weather, setWeather] = useState({ temp: "--", desc: "Loading..." });
-  const [showEmailOptions, setShowEmailOptions] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [userLocation, setUserLocation] = useState("Unknown Location");
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // --- FETCH WEATHER API ---
-  useEffect(() => {
-    const fetchWeather = async () => {
-      try {
-        const apiKey = "YOUR_OPENWEATHERMAP_API_KEY"; 
-        const city = "Delhi";
-        const response = await fetch(
-          `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`
-        );
-        const data = await response.json();
-        setWeather({
-          temp: Math.round(data.main.temp) + "°C",
-          desc: data.weather[0].main
-        });
-      } catch (error) {
-        setWeather({ temp: "29°C", desc: "Sunny" }); // Fallback if API key is missing
+  // --- API CALLS ---
+  const fetchRecentChats = async () => {
+    try {
+      const res = await fetch('/api/chat/sessions');
+      const data = await res.json();
+      if (Array.isArray(data)) setRecentChats(data);
+    } catch (err) {
+      console.error("Failed to load recent chats", err);
+    }
+  };
+
+  const fetchUserProfile = async () => {
+    try {
+      const res = await fetch('/api/profile');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.profile?.location) {
+          setUserLocation(`${data.profile.district}, ${data.profile.state}`);
+        }
       }
-    };
-    fetchWeather();
-  }, []);
+    } catch (err) {
+      console.error("Failed to load profile location", err);
+    }
+  };
 
-  // Derived state: Get messages for the currently active chat, or empty array if it's a new screen
-  const messages = activeChatIndex !== null && chatHistory[activeChatIndex] 
-    ? chatHistory[activeChatIndex].messages 
-    : [];
+    // --- PROTECT ROUTE & FETCH INITIAL DATA ---
+  useEffect(() => {
+    if (status === 'unauthenticated') router.push('/');
+  }, [status, router]);
 
-  // Auto-scroll to bottom when messages change
+// --- PROTECT ROUTE & FETCH INITIAL DATA ---
+  useEffect(() => {
+    if (status === 'unauthenticated') router.push('/');
+  }, [status, router]);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchRecentChats();
+      fetchUserProfile();
+    }
+  }, [status]);
+
+  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Handle sending a text message
-  const handleSend = () => {
-    if (!inputText.trim()) return;
-
-    const currentText = inputText;
-    setInputText("");
-    
-    const userMsg = { text: currentText, sender: "user" };
-    let targetIndex = activeChatIndex;
-
-    // If starting a brand new chat, create it in the history
-    if (targetIndex === null) {
-      targetIndex = chatHistory.length;
-      const newChat = { title: `Chat ${targetIndex + 1}`, messages: [userMsg] };
-      setChatHistory((prev) => [...prev, newChat]);
-      setActiveChatIndex(targetIndex);
-    } else {
-      // If continuing an existing chat, append the message
-      setChatHistory((prev) => {
-        const updated = [...prev];
-        updated[targetIndex] = {
-          ...updated[targetIndex],
-          messages: [...updated[targetIndex].messages, userMsg],
-        };
-        return updated;
-      });
+  const loadChatSession = async (chatId) => {
+    setCurrentChatId(chatId);
+    setMessages([]);
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/chat/sessions/${chatId}`);
+      const data = await res.json();
+      if (data.history) setMessages(data.history);
+    } catch (err) {
+      console.error("Failed to load session", err);
+    } finally {
+      setIsLoading(false);
     }
-
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMsg = { 
-        text: `Here is a simulated response to: "${currentText}". In a real app, this connects to your backend API!`, 
-        sender: "ai" 
-      };
-      
-      setChatHistory((prev) => {
-        const updated = [...prev];
-        if (updated[targetIndex]) {
-          updated[targetIndex] = {
-            ...updated[targetIndex],
-            messages: [...updated[targetIndex].messages, aiMsg],
-          };
-        }
-        return updated;
-      });
-    }, 1000);
+    if (window.innerWidth < 768) setSidebarOpen(false);
   };
 
-  // Handle Enter key press
+  const startNewChat = () => {
+    setCurrentChatId(Date.now().toString());
+    setMessages([]);
+    if (window.innerWidth < 768) setSidebarOpen(false);
+  };
+
+  // --- MESSAGE HANDLERS ---
+  const handleSend = async (customText = null, imageData = null) => {
+    const textToSend = customText || inputText;
+    if (!textToSend.trim() && !imageData) return;
+
+    // Ensure we have a chat ID
+    const activeChatId = currentChatId || Date.now().toString();
+    if (!currentChatId) setCurrentChatId(activeChatId);
+
+    if (!customText) setInputText("");
+
+    // Optimistic UI Update
+    const displayMsg = imageData ? `[Image Uploaded] ${textToSend}` : textToSend;
+    setMessages((prev) => [...prev, { role: "user", parts: [{ text: displayMsg }] }]);
+    setIsLoading(true);
+
+    try {
+      const payload = { message: textToSend, chatId: activeChatId };
+      if (imageData) payload.image = imageData;
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.reply) {
+        setMessages((prev) => [...prev, { role: "model", parts: [{ text: data.reply }] }]);
+        fetchRecentChats(); // Refresh sidebar titles
+      }
+    } catch (error) {
+      console.error("Network Error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      handleSend();
-    }
+    if (e.key === "Enter") handleSend();
   };
 
-  // Handle Image Upload Selection
+  // --- SMART FEATURES ---
+  const handleWeatherClick = () => {
+    startNewChat();
+    const prompt = `What is the current weather forecast for ${userLocation}, and based on that, what farming activities should I prioritize or avoid today?`;
+    handleSend(prompt);
+  };
+
+  const handleDiseaseDetectionClick = () => {
+    startNewChat();
+    setMessages([{ 
+      role: "model", 
+      parts: [{ text: "Please click the camera icon below to upload a clear photo of the affected crop leaf, and I will analyze it for diseases." }] 
+    }]);
+  };
+
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const userMsg = { text: `📎 Image selected: ${file.name}`, sender: "user" };
-    let targetIndex = activeChatIndex;
-
-    if (targetIndex === null) {
-      targetIndex = chatHistory.length;
-      const newChat = { title: `Chat ${targetIndex + 1}`, messages: [userMsg] };
-      setChatHistory((prev) => [...prev, newChat]);
-      setActiveChatIndex(targetIndex);
-    } else {
-      setChatHistory((prev) => {
-        const updated = [...prev];
-        updated[targetIndex] = {
-          ...updated[targetIndex],
-          messages: [...updated[targetIndex].messages, userMsg],
-        };
-        return updated;
-      });
-    }
-    e.target.value = ""; 
-
-    // Simulate AI searching main points for the uploaded file
-    setTimeout(() => {
-      const aiMsg = { 
-        text: `Taking the file and searching main points... Backend analysis for disease detection will appear here!`, 
-        sender: "ai" 
-      };
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result.split(',')[1];
+      const mimeType = file.type;
       
-      setChatHistory((prev) => {
-        const updated = [...prev];
-        if (updated[targetIndex]) {
-          updated[targetIndex] = {
-            ...updated[targetIndex],
-            messages: [...updated[targetIndex].messages, aiMsg],
-          };
-        }
-        return updated;
+      handleSend("Please analyze this crop image for any signs of disease, nutrient deficiency, or pests. Provide actionable remedies.", {
+        base64: base64String,
+        mimeType: mimeType
       });
-    }, 1500);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ""; 
   };
 
-  // Handle Disease Detection Sidebar Click
-  const handleDiseaseDetectionClick = () => {
-    let targetIndex = activeChatIndex;
-    
-    // Create a new chat for disease detection if we aren't in one
-    if (targetIndex === null) {
-      targetIndex = chatHistory.length;
-      const newChat = { title: `Disease Detection`, messages: [] };
-      setChatHistory((prev) => [...prev, newChat]);
-      setActiveChatIndex(targetIndex);
-    }
-
-    // AI prompts user to upload the image
-    setTimeout(() => {
-      setChatHistory((prev) => {
-        const updated = [...prev];
-        if (updated[targetIndex]) {
-          updated[targetIndex] = {
-            ...updated[targetIndex],
-            messages: [
-              ...updated[targetIndex].messages,
-              { text: "Please click the camera icon below to upload a photo of the crop, and I will search the main points to detect the disease.", sender: "ai" }
-            ],
-          };
-        }
-        return updated;
-      });
-    }, 200);
-
-    // Auto-close sidebar on mobile
-    if (window.innerWidth < 768) {
-      setSidebarOpen(false);
-    }
-  };
-
-  // Handle clicking a recent chat
-  const handleRecentChatClick = (index) => {
-    setActiveChatIndex(index);
-    // Auto-close sidebar on mobile devices for better UX
-    if (window.innerWidth < 768) {
-      setSidebarOpen(false);
-    }
-  };
-
-  // Google OAuth backend simulation
-  const handleGoogleAuthRedirect = () => {
-    // In a real app, this would be: window.location.href = '/api/auth/google';
-    alert("Redirecting to Google Account Sign-In... (Backend route executed)");
-  };
+  if (status === 'loading') {
+    return <div className="min-h-screen flex items-center justify-center bg-[#0A0F1C] text-[#10B981]">Loading encrypted session...</div>;
+  }
 
   return (
-    <div className="fixed inset-0 flex h-screen w-screen bg-slate-950 text-white overflow-hidden">
-      {/* Mobile Menu */}
+    <div className="fixed inset-0 flex h-screen w-screen bg-[#0A0F1C] text-[#F1F5F9] overflow-hidden font-sans">
+      
+      {/* Mobile Menu Button */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-slate-800 rounded-lg"
+        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-[#141E30] border border-[#64748B]/30 rounded-lg text-[#F1F5F9]"
       >
         {sidebarOpen ? <X /> : <Menu />}
       </button>
 
-      {/* Sidebar */}
+      {/* ── SIDEBAR ── */}
       <aside
-        className={`fixed md:relative z-40 h-full w-72 bg-slate-900 border-r border-slate-800 p-5 transition-transform duration-300 ${
+        className={`fixed md:relative z-40 h-full w-72 bg-[#141E30]/95 backdrop-blur-md border-r border-[#64748B]/20 p-5 flex flex-col transition-transform duration-300 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
-        <h1 className="text-3xl font-bold text-green-500">🌾 Kisaan Mitra</h1>
-        <p className="text-gray-400 mt-2">Your Farming Assistant</p>
+        <Link href="/" className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#10B981] flex items-center justify-center shadow-lg shadow-[#10B981]/20 text-[#0A0F1C] font-bold">
+            KM
+          </div>
+          <div>
+            <h1 className="font-extrabold tracking-tight text-lg text-[#F1F5F9]">Kisaan Mitra</h1>
+            <p className="text-[10px] font-medium tracking-wider text-[#10B981] uppercase">AI Assistant</p>
+          </div>
+        </Link>
 
         <button 
-          onClick={() => setActiveChatIndex(null)} // Clear screen for a new chat
-          className="w-full mt-6 bg-green-600 py-3 rounded-xl hover:bg-green-700 transition"
+          onClick={startNewChat}
+          className="w-full mt-8 bg-[#10B981]/10 border border-[#10B981]/30 text-[#10B981] font-bold py-3 rounded-xl hover:bg-[#10B981]/20 transition-all flex justify-center items-center gap-2"
         >
-          + New Chat
+          <span>+</span> New Consultation
         </button>
 
-        <div className="mt-8 space-y-3">
-          {/* Live Weather */}
-          <div className="flex gap-3 p-3 hover:bg-slate-800 rounded-xl cursor-pointer">
-            <Cloud /> Weather: {weather.temp} ({weather.desc})
+        <div className="mt-6 space-y-2">
+          <div 
+            onClick={handleWeatherClick}
+            className="flex items-center gap-3 p-3 bg-[#0A0F1C]/50 border border-[#64748B]/10 hover:border-[#10B981]/50 rounded-xl cursor-pointer transition-colors"
+          >
+            <Cloud size={18} className="text-[#3B82F6]" /> 
+            <span className="text-sm font-semibold">Local Weather Insights</span>
           </div>
           
-          {/* Disease Detection - Removed direct upload, added prompt logic */}
           <div 
             onClick={handleDiseaseDetectionClick}
-            className="flex gap-3 p-3 hover:bg-slate-800 rounded-xl cursor-pointer"
+            className="flex items-center gap-3 p-3 bg-[#0A0F1C]/50 border border-[#64748B]/10 hover:border-[#10B981]/50 rounded-xl cursor-pointer transition-colors"
           >
-            <Bug /> Disease Detection
-          </div>
-
-          {/* Email ID Dropdown (Replaces Settings) */}
-          <div className="flex flex-col">
-            <div 
-              onClick={() => setShowEmailOptions(!showEmailOptions)}
-              className="flex gap-3 p-3 hover:bg-slate-800 rounded-xl cursor-pointer transition"
-            >
-              <Mail /> Email ID
-            </div>
-            
-            {showEmailOptions && (
-              <div className="ml-11 flex flex-col gap-3 mt-2 mb-2">
-                <button className="text-left text-gray-400 hover:text-white text-sm transition">
-                  Sign In
-                </button>
-                <button 
-                  onClick={handleGoogleAuthRedirect}
-                  className="text-left text-gray-400 hover:text-white text-sm transition"
-                >
-                  Add Account
-                </button>
-              </div>
-            )}
+            <Bug size={18} className="text-[#F59E0B]" /> 
+            <span className="text-sm font-semibold">Crop Disease Scan</span>
           </div>
         </div>
 
-        <div className="mt-10">
-          <p className="text-gray-400 mb-3">Recent Chats</p>
+        <div className="mt-8 flex-1 overflow-y-auto custom-scrollbar pr-2">
+          <p className="text-[#64748B] text-xs font-bold uppercase tracking-wider mb-3">Consultation History</p>
           
-          {/* Dynamically render actual chat history */}
-          {chatHistory.length === 0 && (
-            <p className="text-slate-600 text-sm italic">No recent chats yet</p>
+          {recentChats.length === 0 && (
+            <p className="text-[#64748B] text-sm italic">No recent chats.</p>
           )}
-          {chatHistory.map((chat, i) => (
+          {recentChats.map((chat) => (
             <div 
-              key={i} 
-              onClick={() => handleRecentChatClick(i)} 
-              className={`mb-2 cursor-pointer transition-colors ${
-                activeChatIndex === i ? "text-green-400 font-bold" : "text-gray-300 hover:text-white"
+              key={chat.chatId} 
+              onClick={() => loadChatSession(chat.chatId)} 
+              className={`p-3 mb-2 rounded-xl cursor-pointer text-sm truncate transition-colors border ${
+                currentChatId === chat.chatId 
+                  ? "bg-[#10B981]/10 border-[#10B981]/30 text-[#10B981] font-bold" 
+                  : "bg-transparent border-transparent text-[#64748B] hover:bg-[#0A0F1C] hover:text-[#F1F5F9]"
               }`}
             >
-              {chat.title}
+              {chat.title || "New Chat"}
             </div>
           ))}
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <div className="flex flex-col flex-1 h-full overflow-hidden">
+      {/* ── MAIN CHAT AREA ── */}
+      <div className="flex flex-col flex-1 h-full relative">
+        
         {/* Header */}
-        <header className="h-16 border-b border-slate-800 flex items-center justify-between px-6 bg-slate-900 shrink-0">
-          <div>
-            <h2 className="text-xl font-bold">Kisaan Mitra AI</h2>
-            <p className="text-green-400 text-sm">Smart Farming Assistant</p>
+        <header className="h-[73px] border-b border-[#64748B]/20 flex items-center justify-between px-6 bg-[#0A0F1C]/80 backdrop-blur-md shrink-0">
+          <div className="pl-12 md:pl-0">
+            <h2 className="text-lg font-bold text-[#F1F5F9]">AI Diagnostic Thread</h2>
+            <p className="text-[#64748B] text-xs font-medium">Location Context: <span className="text-[#10B981]">{userLocation}</span></p>
           </div>
-          <div className="flex gap-4">
-            <Sun className="cursor-pointer hover:text-green-400 transition" />
-            <Moon className="cursor-pointer hover:text-green-400 transition" />
-            <User className="cursor-pointer hover:text-green-400 transition" />
-          </div>
+          <Link href="/profile" className="w-9 h-9 rounded-full bg-[#141E30] border border-[#64748B]/30 flex items-center justify-center hover:bg-[#1C2841] transition-colors">
+            <User size={16} className="text-[#F1F5F9]" />
+          </Link>
         </header>
 
-        {/* Chat Area */}
-        <main className="flex-1 overflow-y-auto p-6 relative flex flex-col">
-          {/* Background */}
-          <div
-            className="absolute inset-0 opacity-5 pointer-events-none"
-            style={{
-              backgroundImage: "url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854')",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
-          />
-
+        {/* Chat Feed */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 relative flex flex-col custom-scrollbar">
           <div className="relative z-10 max-w-4xl mx-auto w-full flex-1 flex flex-col">
             
-            {/* Show Welcome Screen ONLY if there are no messages */}
-            {messages.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-center py-16">
-                <h1 className="text-5xl font-bold text-green-500">🌾 Kisaan Mitra AI</h1>
-                <p className="text-gray-400 mt-4 text-lg">
-                  Your intelligent farming assistant. How can I help you today?
+            {messages.length === 0 && !isLoading ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-80 mt-10">
+                <div className="w-20 h-20 rounded-3xl bg-[#10B981]/10 border border-[#10B981]/20 flex items-center justify-center mb-6">
+                  <Cloud size={40} className="text-[#10B981]" />
+                </div>
+                <h1 className="text-2xl font-bold text-[#F1F5F9]">Kisaan Mitra AI Core</h1>
+                <p className="text-[#64748B] mt-2 text-sm max-w-md">
+                  Upload photos for disease scanning or ask for hyper-local weather advisory.
                 </p>
               </div>
             ) : (
-              /* Render Messages */
               <div className="space-y-6 pb-6">
                 {messages.map((msg, index) => (
-                  <div 
-                    key={index} 
-                    className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start gap-4"}`}
-                  >
-                    {/* AI Avatar */}
-                    {msg.sender === "ai" && (
-                      <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center shrink-0">
-                        🌾
-                      </div>
-                    )}
-                    
-                    {/* Message Bubble */}
-                    <div 
-                      className={`px-5 py-3 rounded-2xl max-w-2xl ${
-                        msg.sender === "user" 
-                          ? "bg-green-600 text-white" 
-                          : "bg-slate-800 border border-slate-700 text-gray-100"
-                      }`}
-                    >
-                      {msg.text}
+                  <div key={index} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                    <div className={`p-4 rounded-2xl max-w-[85%] md:max-w-[75%] text-sm md:text-base leading-relaxed ${
+                      msg.role === "user" 
+                        ? "bg-[#10B981] text-[#0A0F1C] font-semibold rounded-tr-none shadow-lg shadow-[#10B981]/10" 
+                        : "bg-[#141E30] border border-[#64748B]/30 text-[#F1F5F9] rounded-tl-none shadow-md"
+                    }`}>
+                      <p className="whitespace-pre-wrap">{msg.parts[0].text}</p>
                     </div>
                   </div>
                 ))}
-                {/* Invisible div to scroll to */}
+                
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="p-4 rounded-2xl bg-[#141E30] border border-[#64748B]/30 text-[#64748B] rounded-tl-none animate-pulse text-sm">
+                      Processing environmental data...
+                    </div>
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
             )}
           </div>
         </main>
 
-        {/* Input Area */}
-        <div className="border-t border-slate-800 p-4 bg-slate-900 shrink-0">
-          <div className="flex items-center gap-3 bg-slate-800 rounded-full px-5 py-4 max-w-4xl mx-auto focus-within:ring-1 focus-within:ring-green-500 transition">
+        {/* ── INPUT AREA ── */}
+        <div className="border-t border-[#64748B]/20 p-4 bg-[#0A0F1C]/95 backdrop-blur-md shrink-0">
+          <div className="flex items-center gap-2 bg-[#141E30] border border-[#64748B]/30 rounded-2xl px-4 py-3 max-w-4xl mx-auto focus-within:border-[#10B981] transition-colors shadow-inner">
             
             {/* Hidden File Input */}
             <input 
@@ -384,34 +316,28 @@ export default function Home() {
               onChange={handleImageUpload}
             />
             
-            {/* Camera Icon Triggers Hidden Input */}
-            <ImageIcon 
+            <button 
               onClick={() => fileInputRef.current?.click()}
-              className="text-gray-400 cursor-pointer hover:text-white transition shrink-0" 
-            />
+              className="p-2 rounded-xl text-[#64748B] hover:text-[#10B981] hover:bg-[#10B981]/10 transition-colors shrink-0" 
+            >
+              <ImageIcon size={20} />
+            </button>
 
-            {/* Chat Input */}
             <input
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="flex-1 bg-transparent outline-none placeholder-gray-500 min-w-0"
-              placeholder="Ask anything about farming..."
+              disabled={isLoading}
+              className="flex-1 bg-transparent outline-none placeholder-[#64748B] text-[#F1F5F9] text-sm md:text-base min-w-0 px-2"
+              placeholder="Query the database or ask for advice..."
             />
 
-            {/* Mic Icon Toggles Recording State */}
-            <Mic 
-              onClick={() => setIsRecording(!isRecording)}
-              className={`cursor-pointer transition shrink-0 ${isRecording ? "text-red-500 animate-pulse" : "text-gray-400 hover:text-white"}`} 
-            />
-
-            {/* Send Button */}
             <button 
-              onClick={handleSend}
-              disabled={!inputText.trim()}
-              className="bg-green-600 p-2 rounded-full hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+              onClick={() => handleSend()}
+              disabled={isLoading || (!inputText.trim())}
+              className="bg-[#10B981] p-2.5 rounded-xl text-[#0A0F1C] hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
             >
-              <Send size={18} />
+              <Send size={18} className="translate-x-[-1px] translate-y-[1px]" />
             </button>
           </div>
         </div>
