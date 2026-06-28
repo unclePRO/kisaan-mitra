@@ -24,25 +24,17 @@ export async function POST(request) {
     const chatDoc = await chatsCollection.findOne({ userId, chatId });
     const existingHistory = chatDoc?.history || [];
 
-    // Initialize Gemini chat context
     const chatSession = startNewChat(existingHistory);
     
-    // Check if an image was uploaded for disease detection
-    let aiReply;
-    if (image) {
-       // Send multimodal request to Gemini
-       const parts = [
-         { text: message },
-         { inlineData: { data: image.base64, mimeType: image.mimeType } }
-       ];
-       // Note: Your gemini.js library needs to handle array inputs if you pass parts. 
-       // For a standard sendMessage implementation, it usually accepts an array.
-       aiReply = await sendMessage(chatSession, parts);
-    } else {
-       aiReply = await sendMessage(chatSession, message);
-    }
+    // Pass the image directly if it exists, otherwise null
+    const aiReply = await sendMessage(
+      chatSession, 
+      message, 
+      image?.base64 || null, 
+      image?.mimeType || "image/jpeg"
+    );
 
-    // Standardize history formatting for MongoDB
+    // Standardize history for DB
     const userHistoryPart = image 
       ? { role: 'user', parts: [{ text: `[Image Uploaded] ${message}` }] }
       : { role: 'user', parts: [{ text: message }] };
