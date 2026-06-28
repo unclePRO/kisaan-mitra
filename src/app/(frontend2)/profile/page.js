@@ -38,7 +38,7 @@ export default function UserProfile() {
   // --- CAMERA LOGIC ---
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
       setIsCameraOpen(true);
       setTimeout(() => {
         if (videoRef.current) {
@@ -74,8 +74,8 @@ export default function UserProfile() {
   };
 
   return (
-    // Changed to full screen rigidly fixed to viewport
-    <div className="w-full h-screen fixed inset-0 bg-[#0A0F1C] text-[#F1F5F9] font-sans p-4 md:p-8 flex flex-col overflow-hidden">
+    // FIX 1: Changed to overflow-y-auto on mobile so the whole page can scroll
+    <div className="w-full min-h-screen bg-[#0A0F1C] text-[#F1F5F9] font-sans p-4 md:p-8 flex flex-col md:h-screen md:fixed md:inset-0 md:overflow-hidden">
       
       {/* Header Area - Now spans full width */}
       <div className="w-full mb-8 flex items-center justify-between flex-shrink-0">
@@ -91,11 +91,11 @@ export default function UserProfile() {
         </button>
       </div>
 
-      {/* Main Grid - Spans full width and remaining height, split into 4 columns for better widescreen scaling */}
-      <div className="w-full flex-1 grid grid-cols-1 md:grid-cols-4 gap-8 overflow-hidden">
+      {/* FIX 2: Removed overflow-hidden from this grid wrapper */}
+      <div className="w-full flex-1 grid grid-cols-1 md:grid-cols-4 gap-8">
         
         {/* Left Sidebar: Profile Card (Takes 1/4 of screen on desktop) */}
-        <div className="md:col-span-1 space-y-6 overflow-y-auto pb-8 hide-scrollbar">
+        <div className="md:col-span-1 space-y-6 md:overflow-y-auto pb-8 hide-scrollbar">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -129,18 +129,21 @@ export default function UserProfile() {
               <div className="w-full mt-6 space-y-2">
                 <button 
                   onClick={() => setActiveTab('personal')}
+                  onTouchStart={() => setActiveTab('personal')}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${activeTab === 'personal' ? 'bg-[#10B981]/10 text-[#10B981]' : 'hover:bg-[#0A0F1C] text-[#64748B]'}`}
                 >
                   <User size={18} /> Personal Info
                 </button>
                 <button 
                   onClick={() => setActiveTab('security')}
+                  onTouchStart={() => setActiveTab('security')}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${activeTab === 'security' ? 'bg-[#10B981]/10 text-[#10B981]' : 'hover:bg-[#0A0F1C] text-[#64748B]'}`}
                 >
                   <Shield size={18} /> Security
                 </button>
                 <button 
                   onClick={() => setActiveTab('notifications')}
+                  onTouchStart={() => setActiveTab('notifications')}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${activeTab === 'notifications' ? 'bg-[#10B981]/10 text-[#10B981]' : 'hover:bg-[#0A0F1C] text-[#64748B]'}`}
                 >
                   <Bell size={18} /> Notifications
@@ -151,7 +154,7 @@ export default function UserProfile() {
         </div>
 
         {/* Right Main Content Area (Takes 3/4 of screen on desktop) */}
-        <div className="md:col-span-3 overflow-y-auto pb-8 hide-scrollbar">
+        <div className="md:col-span-3 md:overflow-y-auto pb-8 hide-scrollbar">
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
