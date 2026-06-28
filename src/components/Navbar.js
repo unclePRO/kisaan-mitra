@@ -1,25 +1,83 @@
-import Link from 'next/link';
+import Image from "next/image";
+import Link from "next/link";
+
+// ─── Midnight Canopy Palette ───────────────────────────────────────────────
+// Abyss (bg):            #0A0F1C
+// Surface (elevated):    #141E30
+// Canopy Green (accent): #10B981
+// Deep Stream (blue):    #2563EB
+// Starlight (text):      #F1F5F9
+// Mist (muted/borders):  #64748B
+// ──────────────────────────────────────────────────────────────────────────
 
 export default function Navbar() {
+  const navLinks = [
+    { label: "Chat AI",   href: "/chat"      },
+    { label: "Crop Scan", href: "/diagnosis" },
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "Learn",     href: "/learn"     },
+  ];
+
   return (
-    // Glassy top bar: Translucent Abyss background with a Surface border
-    <nav className="sticky top-0 z-50 bg-[#0A0F1C]/80 backdrop-blur-lg border-b border-[#141E30]">
-      <div className="max-w-4xl mx-auto p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-        
-        {/* Brand Logo */}
-        <Link href="/" className="text-2xl font-bold tracking-wide flex items-center gap-2 text-[#F1F5F9] hover:text-[#10B981] transition-colors">
-          <span className="text-[#10B981]">🌱</span> Kisaan Mitra
-        </Link>
-        
-        {/* Navigation Links - Mist text (#64748B) switching to Canopy Green (#10B981) on hover */}
-        <div className="flex gap-6 font-medium overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 text-sm sm:text-base">
-          <Link href="/chat" className="text-[#64748B] hover:text-[#10B981] transition-colors shrink-0">Chat AI</Link>
-          <Link href="/diagnosis" className="text-[#64748B] hover:text-[#10B981] transition-colors shrink-0">Crop Scan</Link>
-          <Link href="/dashboard" className="text-[#64748B] hover:text-[#10B981] transition-colors shrink-0">Dashboard</Link>
-          <Link href="/learn" className="text-[#64748B] hover:text-[#10B981] transition-colors shrink-0">Learn</Link>
-          <Link href="/profile" className="text-[#64748B] hover:text-[#10B981] transition-colors shrink-0">Profile</Link>
+    <nav
+      className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 backdrop-blur border-b"
+      style={{
+        background: "rgba(10, 15, 28, 0.88)",
+        borderColor: "rgba(100, 116, 139, 0.2)",
+      }}
+    >
+      {/* Logo */}
+      <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+        <div className="relative w-8 h-8">
+          <Image 
+            src="/favicon.ico"
+            alt="Kisaan Mitra Logo"
+            fill
+            sizes="32px"
+            className="object-contain"
+          />
         </div>
+        <span className="font-extrabold text-lg tracking-tight" style={{ color: "#F1F5F9" }}>
+          Kisaan Mitra
+        </span>
+      </Link>
+                  
+       
+      {/* Desktop nav links */}
+      <div className="hidden sm:flex items-center gap-6 text-sm">
+        {navLinks.map(({ label, href }) => (
+          <Link
+            key={href}
+            href={href}
+            className="transition-colors duration-200"
+            style={{ color: "#64748B" }}
+          >
+            {label}
+          </Link>
+        ))}
+
+        {/* CTA pill */}
+        <Link
+          href="/chat"
+          className="font-semibold text-xs px-4 py-1.5 rounded-full transition-colors duration-200"
+          style={{ background: "#10B981", color: "#0A0F1C" }}
+        >
+          Login
+        </Link>
       </div>
+
+      {/* Mobile hamburger */}
+      <button
+        className="sm:hidden transition-colors duration-200"
+        style={{ color: "#64748B" }}
+        aria-label="Open menu"
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="3" y1="6"  x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
     </nav>
   );
 }
