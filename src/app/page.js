@@ -162,9 +162,6 @@ export default function Home() {
 
       {/* ── Footer strip ── */}
       <div className="w-full px-8 py-4 flex flex-wrap items-center justify-between gap-3 border-t bg-[#141E30]/60 border-[#64748B]/15">
-        <span className="text-xs text-[#64748B]/60">
-          Available in 18 languages · Works offline in the field
-        </span>
         <div className="flex gap-1.5">
           {["हिन्दी", "ਪੰਜਾਬੀ", "తెలుగు", "+15"].map((lang) => (
             <span
