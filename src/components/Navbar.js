@@ -50,7 +50,7 @@ export default function Navbar() {
         <Link href="/" onClick={closeMenu} className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
           <div className="relative w-8 h-8">
             <Image 
-              src="/favicon.ico"
+              src="/logo.png"
               alt="Kisaan Mitra Logo"
               fill
               sizes="32px"
