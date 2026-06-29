@@ -1,93 +1,75 @@
-# Kisaan Mitra - Your AI Farmer Friend
+# 🌾 Kisaan Mitra: Precision Agri-Tech Ecosystem
 
-Kisaan Mitra (Farmer's Friend) is an AI-powered, mobile-first web application designed to assist local farmers and beyond. It provides hyper-localized farming advice, instant crop disease diagnosis via camera upload, and real-time market (Mandi) and weather data.
+**Live Deployment:** [https://kisaan-mitra-ashen.vercel.app/](https://kisaan-mitra-ashen.vercel.app/)
 
-## Key Features
+Kisaan Mitra is a context-aware, multimodal AI-powered agricultural companion designed to empower farmers. By bridging the gap between traditional farming and modern data-driven agriculture, we provide real-time telemetry, AI crop diagnostics, and market intelligence to help farmers make proactive, high-yield decisions.
 
-- AI Chat Assistant: Ask questions about fertilizers, crop timing, and pest control using text or voice. Powered by Google Gemini.
+---
 
-- Crop Scan Diagnosis: Snap a photo of a diseased leaf to get instant, organic treatment recommendations.
+## ✨ Features & What We Built Together
 
-- Real-time Dashboard: Live local weather forecasts and Mandi (market) crop prices.
+* **🤖 AI Agriculture Scanner:** A unified camera and upload interface where farmers can snap photos of their crops. Powered by Gemini Multimodal AI, it detects diseases, pest infestations, and nutrient deficiencies, providing localized, actionable remedies.
+* **📊 Real-Time Telemetry Dashboard:** A beautifully designed Farm Command Center featuring live weather forecasting, simulated satellite soil sensor data (N-P-K levels, moisture), and financial/yield analytics visualized with Recharts.
+* **💰 Smart Mandi Tracker:** An intelligent AI assistant that estimates wholesale market prices for specific crops in the user's localized region based on current agronomic trends.
+* **📚 Interactive Knowledge Hub:** A searchable, endless resource library. If a guide doesn't exist, the AI engine dynamically generates a perfectly formatted, step-by-step agricultural handbook on the fly.
+* **✅ Automated Task Manager:** A database-connected agronomic task scheduler that helps farmers track their sowing, fertilizing, and harvesting cycles.
+* **💬 Floating AI Assistant:** A persistent, context-aware chatbot available across the dashboard to answer quick questions about farming practices, loans, and weather.
+* **🔐 Secure Authentication:** Seamless Google OAuth login flow using NextAuth securely persisted in MongoDB.
 
-- Micro-Learning: Quick, seasonal audio and visual tutorials on modern farming techniques.
+---
 
-- Localized Profiles: Tailor advice based on the farmer's specific language (Hindi/English), region, and primary crops.
+## 🛠️ Tech Stack & Packages
 
-## Tech Stack
+Built on the modern **Next.js 16 (App Router)** and **React 19** ecosystem. 
 
-- Frontend: Next.js (App Router), React, Tailwind CSS (Plain JavaScript)
+**Core Dependencies:**
+* `@google/genai` (^2.10.0) - Core multimodal AI reasoning engine.
+* `next-auth` (^4.24.14) & `@next-auth/mongodb-adapter` (^1.1.3) - Authentication framework.
+* `mongodb` (^7.4.0) - NoSQL database for user profiles and tasks.
+* `recharts` (^3.9.0) - Interactive charting for yield and operational costs.
+* `framer-motion` (^12.42.0) - Fluid animations and modal transitions.
+* `react-markdown` (^10.1.0) - Secure, elegant parsing of AI-generated Markdown.
+* `lucide-react` (^1.21.0) - Beautiful, scalable UI icons.
+* `tailwindcss` (^4.0.0) via `@tailwindcss/postcss` (^4.3.1) - Styling and UI consistency.
+* `babel-plugin-react-compiler` (^1.0.0) & `react-is` (^19.2.7) - Build optimizations.
 
-- Backend: Next.js API Routes (Serverless)
+---
 
-- AI Engine: Google Gemini API
+## 🚀 Setup Instructions
 
-- Database: MongoDB
+Follow these steps to run the project locally on your machine:
 
-- External APIs: OpenWeatherMap (Weather), [Mandi API Provider] (Market Prices)
+\`\`\`bash
+# 1. Clone the repository
+git clone https://github.com/unclePRO/kisaan-mitra
 
-## Project Structure & Work Division
-
-To ensure a conflict-free Git workflow, the team is divided into specific zones within the repository using Next.js Route Groups and custom folders:
-
-Dev 1 (AI & Database): Focuses on backend logic, AI prompting, and database integration. Works strictly in app/api/(dev1_ai_backend) and lib/.
-
-Dev 2 (Frontend Layouts): Focuses on mobile-first UI, page layouts, and data display. Works strictly in app/(dev2_frontend_pages).
-
-Dev 3 (Frontend Interactivity): Focuses on interactive elements, state management, and hardware access (camera). Works strictly in dev3_ui_components/ and specific interactive pages.
-
-Dev 4 (Backend APIs): Focuses on fetching external data (weather, prices) and writing API endpoints. Works strictly in app/api/(dev4_api_routes).
-
-## Getting Started (Local Development)
-
-1. Prerequisites
-
-- Node.js (v18 or higher)
-
-- npm or yarn
-
-- A Google Gemini API Key
-
-- A MongoDB Connection URI
-
-2. Installation
-
-Clone the repository and install dependencies:
-
-```bash
-git clone https://github.com/[your-repo-link]/kisaan-mitra.git
+# 2. Navigate into the project directory
 cd kisaan-mitra
-npm install
-```
 
+# 3. Install dependencies 
+# (Note: Using legacy-peer-deps to resolve upstream MongoDB adapter conflicts)
+npm install --legacy-peer-deps
 
-3. Environment Variables
+# 4. Set up Environment Variables
+# Create a .env.local file in the root directory and add your credentials:
+# MONGODB_URI=your_mongodb_connection_string
+# GOOGLE_GENAI_API_KEY=your_gemini_api_key
+# NEXTAUTH_SECRET=your_random_secret_string
+# NEXTAUTH_URL=http://localhost:3000
 
-Create a .env.local file in the root directory and add the following keys:
+# 5. Start the development server
+npm run dev
+\`\`\`
 
-```bash
-GEMINI_API_KEY=your_gemini_api_key_here
-MONGODB_URI=your_mongodb_connection_string_here
-NEXT_PUBLIC_WEATHER_API_KEY=your_weather_api_key_here
-```
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the application in action.
 
-4. Run the Development Server
+---
 
-Start the Next.js development server:
+## 🤝 The Team
 
-`npm run dev`
+This ecosystem was built collaboratively by:
 
-
-Open http://localhost:3000 in your browser to see the application.
-
-## Git Workflow Rules
-
-To avoid merge conflicts during the hackathon, please adhere to the following rules:
-
-Stay in your lane: Only edit files within your designated folder ((dev2_frontend_pages), dev3_ui_components, etc.).
-
-Branching: Create a new branch for every feature (e.g., git checkout -b dev2-dashboard-layout).
-
-Pull Requests: Push your branch and open a PR to main when a feature is complete.
-
-Built with code and care for local agriculture.
+* [**unclePRO**](https://github.com/unclePRO)
+* [**krishnarajputnan**](https://github.com/krishnarajputnan)
+* [**mayank1418**](https://github.com/mayank1418)
+* [**Arnavpola**](https://github.com/Arnavpola)
