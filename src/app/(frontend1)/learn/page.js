@@ -155,7 +155,7 @@ export default function Learn() {
   });
 
   return (
-    <div className="min-h-screen w-screen font-sans bg-[#0A0F1C] text-[#F1F5F9] overflow-x-hidden relative">
+    <div className="min-h-screen w-full font-sans bg-[#0A0F1C] text-[#F1F5F9] overflow-x-hidden relative">
       
       {/* ── Navigation Bar ── */}
       <nav className="w-full px-6 py-4 flex justify-between items-center border-b border-[#64748B]/15 bg-[#0A0F1C]/80 backdrop-blur sticky top-0 z-40">

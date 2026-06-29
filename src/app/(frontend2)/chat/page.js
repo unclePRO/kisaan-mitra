@@ -175,7 +175,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="fixed inset-0 flex h-screen w-screen bg-[#0A0F1C] text-[#F1F5F9] overflow-hidden font-sans">
+    <div className="fixed inset-0 flex h-screen w-full bg-[#0A0F1C] text-[#F1F5F9] overflow-hidden font-sans">
       
       {/* Mobile Menu Button */}
       <button

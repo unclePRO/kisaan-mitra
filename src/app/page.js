@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="min-h-screen w-screen font-sans bg-[#0A0F1C] text-[#F1F5F9] overflow-x-hidden">
+    <div className="min-h-screen w-full font-sans bg-[#0A0F1C] text-[#F1F5F9] overflow-x-hidden">
       {/* ── Hero ── */}
       <section className="relative flex flex-col items-center text-center px-6 pt-16 pb-12 overflow-hidden">
         {/* Radial glow */}
@@ -42,7 +42,7 @@ export default function Home() {
       </p>
 
       {/* ── Feature grid — full bleed ── */}
-      <div className="w-screen border-t border-b border-[#64748B]/15 -mx-0">
+      <div className="w-full border-t border-b border-[#64748B]/15 -mx-0">
         {/* 4 cards in one row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 border-b border-[#64748B]/15">
           
