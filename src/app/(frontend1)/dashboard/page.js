@@ -175,7 +175,7 @@ export default function Dashboard() {
   };
 
   // ── 3. AI MANDI HANDLER ──
-  const handleMandiAiSearch = async () => {
+const handleMandiAiSearch = async () => {
     if (!mandiQuery.trim()) return;
     setIsMandiLoading(true);
     setMandiResponse("");
@@ -185,7 +185,14 @@ export default function Dashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          message: `Acting as KisaanMitra, what are the current estimated wholesale Mandi prices for ${mandiQuery} in/around ${userLocation}? Provide a short, direct estimate and remind the user that these are AI estimates based on recent trends.`, 
+          // IMPROVED PROMPT: Instruct it to synthesize its internal knowledge instead of browsing
+          message: `Acting as KisaanMitra, provide an expert market estimate for: "${mandiQuery}" in the ${userLocation} region. 
+          
+          Guidelines:
+          1. Do not try to browse the internet.
+          2. Based on typical seasonal trends and regional market data for this crop, give a realistic price range (₹ per quintal).
+          3. Explicitly state: "Yeh ek estimated trend hai, sahi bhav ke liye Agmarknet ya nazdiki Mandi visit karein."
+          4. Keep the tone helpful and grounded.`, 
           chatId: "mandi-chat-" + Date.now() 
         }) 
       });
@@ -193,7 +200,7 @@ export default function Dashboard() {
       const data = await res.json();
       if (res.ok) setMandiResponse(data.reply);
     } catch (error) {
-      setMandiResponse("⚠️ Failed to connect to pricing database.");
+      setMandiResponse("⚠️ Failed to connect to the AI engine.");
     } finally {
       setIsMandiLoading(false);
     }
