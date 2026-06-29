@@ -1,6 +1,20 @@
+"use client";
 import Link from "next/link";
+import { useSession, signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  const handleClick = () => {
+    if (session) {
+      router.push("/chat");        // already logged in → go directly
+    } else {
+      signIn("google", { callbackUrl: "/chat" });  // not logged in → sign in first
+    }
+  };
+
   return (
     <div className="min-h-screen w-full font-sans bg-[#0A0F1C] text-[#F1F5F9] overflow-x-hidden">
       {/* ── Hero ── */}
@@ -27,12 +41,13 @@ export default function Home() {
         </p>
         {/* CTA */}
         <div className="flex flex-wrap gap-3 justify-center mb-10">
-          <Link
-            href="/chat"
-            className="font-bold px-6 py-2.5 rounded-full transition-all hover:-translate-y-0.5 text-sm bg-[#10B981] text-[#0A0F1C] hover:bg-[#0ea472]"
+          <button
+            onClick={handleClick}
+            disabled={status === "loading"}
+            className="font-bold px-6 py-2.5 rounded-full transition-all hover:-translate-y-0.5 text-sm bg-[#10B981] text-[#0A0F1C] hover:bg-[#0ea472] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Get started →
-          </Link>
+            {status === "loading" ? "Loading..." : "Get started →"}
+          </button>
         </div>
       </section>
 
