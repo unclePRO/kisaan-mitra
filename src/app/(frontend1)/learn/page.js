@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Loader2 } from "lucide-react"; // Import Loader for AI generation state
+import { Loader2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 export default function Learn() {
   const [activeFormat, setActiveFormat] = useState("All Formats");
@@ -21,7 +22,8 @@ export default function Learn() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            message: `Write a short, high-value, step-by-step agricultural guide on: "${searchQuery}". Enforce a maximum length of 3 short sections. Format using ONLY basic HTML tags like <h3>, <p>, and <li>. Crucial: Ensure every single open HTML tag is perfectly closed. Do not use markdown blocks or backticks.`,
+            // Removed HTML instruction, let AI output clean Markdown
+            message: `Write a short, high-value, step-by-step agricultural guide on: "${searchQuery}". Enforce a maximum length of 3 short sections. Use standard Markdown for formatting (bolding, lists). Keep it highly actionable.`,
             chatId: "learning-hub-" + Date.now() 
           })
         });
@@ -37,7 +39,12 @@ export default function Learn() {
             category: "AI Generated",
             duration: "2 min read",
             icon: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
-            fullContent: <div className="space-y-4 text-sm leading-relaxed text-[#F1F5F9]/90" dangerouslySetInnerHTML={{ __html: data.reply }} />
+            // Wrapped in ReactMarkdown with Tailwind styling for prose elements
+            fullContent: (
+              <div className="space-y-4 text-sm leading-relaxed text-[#F1F5F9]/90 [&>h3]:text-lg [&>h3]:font-bold [&>h3]:mt-4 [&>ul]:list-disc [&>ul]:ml-4 [&>p]:mb-2">
+                <ReactMarkdown>{data.reply}</ReactMarkdown>
+              </div>
+            )
           });
         }
       } catch (err) {

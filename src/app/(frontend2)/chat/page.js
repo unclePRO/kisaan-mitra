@@ -8,6 +8,7 @@ import {
   Cloud, Bug, User, ChevronLeft
 } from "lucide-react";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 
 export default function ChatPage() {
   const { data: session, status } = useSession();
@@ -50,12 +51,7 @@ export default function ChatPage() {
     }
   };
 
-    // --- PROTECT ROUTE & FETCH INITIAL DATA ---
-  useEffect(() => {
-    if (status === 'unauthenticated') router.push('/');
-  }, [status, router]);
-
-// --- PROTECT ROUTE & FETCH INITIAL DATA ---
+  // --- PROTECT ROUTE & FETCH INITIAL DATA ---
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/');
   }, [status, router]);
@@ -280,12 +276,16 @@ export default function ChatPage() {
               <div className="space-y-6 pb-6">
                 {messages.map((msg, index) => (
                   <div key={index} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`p-4 rounded-2xl max-w-[85%] md:max-w-[75%] text-sm md:text-base leading-relaxed ${
+                    <div className={`p-4 rounded-2xl max-w-[85%] md:max-w-[75%] text-sm md:text-base leading-relaxed overflow-hidden ${
                       msg.role === "user" 
                         ? "bg-[#10B981] text-[#0A0F1C] font-semibold rounded-tr-none shadow-lg shadow-[#10B981]/10" 
-                        : "bg-[#141E30] border border-[#64748B]/30 text-[#F1F5F9] rounded-tl-none shadow-md"
+                        : "bg-[#141E30] border border-[#64748B]/30 text-[#F1F5F9] rounded-tl-none shadow-md [&>p]:mb-3 [&>p:last-child]:mb-0 [&>ul]:list-disc [&>ul]:ml-5 [&>ul]:mb-3 [&>ol]:list-decimal [&>ol]:ml-5 [&>ol]:mb-3 [&>h1]:font-bold [&>h2]:font-bold [&>h3]:font-bold"
                     }`}>
-                      <p className="whitespace-pre-wrap">{msg.parts[0].text}</p>
+                      {msg.role === "user" ? (
+                        <p className="whitespace-pre-wrap">{msg.parts[0].text}</p>
+                      ) : (
+                        <ReactMarkdown>{msg.parts[0].text}</ReactMarkdown>
+                      )}
                     </div>
                   </div>
                 ))}

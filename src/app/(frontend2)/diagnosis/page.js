@@ -3,6 +3,7 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, Upload, ScanLine, Bug, AlertCircle, X, Zap, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
+import ReactMarkdown from 'react-markdown';
 
 export default function UnifiedCropScan() {
   const [isScanning, setIsScanning] = useState(false);
@@ -129,8 +130,8 @@ export default function UnifiedCropScan() {
             <div className="p-3 bg-[#10B981]/10 rounded-2xl">{scanResult.icon}</div>
             <h3 className="font-bold text-2xl">{scanResult.title}</h3>
           </div>
-          <div className="text-[#F1F5F9] text-base md:text-lg leading-relaxed whitespace-pre-wrap bg-[#0A0F1C] p-6 rounded-2xl border border-[#64748B]/10">
-            {scanResult.details}
+          <div className="text-[#F1F5F9] text-base md:text-lg leading-relaxed whitespace-pre-wrap bg-[#0A0F1C] p-6 rounded-2xl border border-[#64748B]/10 [&>p]:mb-3 [&>p:last-child]:mb-0 [&>ul]:list-disc [&>ul]:ml-6 [&>ul]:mb-3 [&>ol]:list-decimal [&>ol]:ml-6 [&>ol]:mb-3 [&>h1]:font-bold [&>h1]:mb-2 [&>h2]:font-bold [&>h2]:mb-2 [&>h3]:font-bold [&>h3]:mb-2">
+            <ReactMarkdown>{scanResult.details}</ReactMarkdown>
           </div>
           <button 
             onClick={() => { setSelectedImage(null); setScanResult(null); }} 

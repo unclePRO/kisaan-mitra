@@ -8,6 +8,7 @@ import {
   CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell 
 } from "recharts";
 import { Loader2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 export default function Dashboard() {
   // Added status to track loading/unauthenticated state
@@ -530,8 +531,8 @@ const handleMandiAiSearch = async () => {
                     </button>
                   </div>
                   {mandiResponse && (
-                    <div className="mt-2 p-4 bg-[#0A0F1C]/80 rounded-xl border border-[#64748B]/20 text-sm leading-relaxed text-[#F1F5F9]">
-                      {mandiResponse}
+                    <div className="mt-2 p-4 bg-[#0A0F1C]/80 rounded-xl border border-[#64748B]/20 text-sm leading-relaxed text-[#F1F5F9] [&>p]:mb-2 [&>ul]:list-disc [&>ul]:ml-4">
+                      <ReactMarkdown>{mandiResponse}</ReactMarkdown>
                     </div>
                   )}
                 </div>
@@ -653,8 +654,8 @@ const handleMandiAiSearch = async () => {
                        <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 text-[10px] font-bold ${msg.role === "user" ? "bg-blue-600/20 text-blue-400 border border-blue-500/20" : "bg-emerald-500/20 text-[#10B981] border border-emerald-500/20"}`}>
                           {msg.role === "user" ? "ME" : "AI"}
                        </div>
-                       <div className={`p-3 rounded-2xl max-w-[75%] text-xs font-medium leading-relaxed ${msg.role === "user" ? "bg-[#10B981] text-[#0A0F1C] font-bold" : "bg-[#141E30] border border-[#64748B]/20 text-[#F1F5F9]"}`}>
-                          {msg.text}
+                       <div className={`p-3 rounded-2xl max-w-[75%] text-xs font-medium leading-relaxed overflow-hidden ${msg.role === "user" ? "bg-[#10B981] text-[#0A0F1C] font-bold" : "bg-[#141E30] border border-[#64748B]/20 text-[#F1F5F9] [&>p]:mb-2 [&>ul]:list-disc [&>ul]:ml-4"}`}>
+                          <ReactMarkdown>{msg.text}</ReactMarkdown>
                        </div>
                     </div>
                  ))}
