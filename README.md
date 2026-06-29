@@ -8,12 +8,18 @@ Kisaan Mitra is a context-aware, multimodal AI-powered agricultural companion de
 
 ## Features & What We Built Together
 * **Kisaan Mitra AI helper:** Talk to the gemini based AI assistant for any queries related to farming. Supports many regional languages as well.
+
 * **AI Agriculture Scanner:** A unified camera and upload interface where farmers can snap photos of their crops. Powered by Gemini Multimodal AI, it detects diseases, pest infestations, and nutrient deficiencies, providing localized, actionable remedies.
+
 * **Interactive Knowledge Hub:** A searchable, endless resource library. If a guide doesn't exist, the AI engine dynamically generates a perfectly formatted, step-by-step agricultural handbook on the fly.
+
 * **Automated Task Manager:** A database-connected agronomic task scheduler that helps farmers track their sowing, fertilizing, and harvesting cycles.
 * **Floating AI Assistant:** A persistent, context-aware chatbot available across the dashboard to answer quick questions about farming practices, loans, and weather.
+
 * **Secure Authentication:** Seamless Google OAuth login flow using NextAuth securely persisted in MongoDB.
+
 * **Real-Time Telemetry Dashboard:** A beautifully designed Farm Command Center featuring live weather forecasting, simulated satellite soil sensor data (N-P-K levels, moisture), and financial/yield analytics visualized with Recharts. Currently not functional.
+
 * **Smart Mandi Tracker:** An intelligent AI assistant that estimates wholesale market prices for specific crops in the user's localized region based on current agronomic trends. Currently not functional.
 
 ---
