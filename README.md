@@ -1,24 +1,24 @@
-# 🌾 Kisaan Mitra: Precision Agri-Tech Ecosystem
+# Kisaan-Mitra
 
-**Live Deployment:** [https://kisaan-mitra-ashen.vercel.app/](https://kisaan-mitra-ashen.vercel.app/)
+**[Live Deployment Link](https://kisaan-mitra-ashen.vercel.app/)**
 
 Kisaan Mitra is a context-aware, multimodal AI-powered agricultural companion designed to empower farmers. By bridging the gap between traditional farming and modern data-driven agriculture, we provide real-time telemetry, AI crop diagnostics, and market intelligence to help farmers make proactive, high-yield decisions.
 
 ---
 
-## ✨ Features & What We Built Together
-
-* **🤖 AI Agriculture Scanner:** A unified camera and upload interface where farmers can snap photos of their crops. Powered by Gemini Multimodal AI, it detects diseases, pest infestations, and nutrient deficiencies, providing localized, actionable remedies.
-* **📊 Real-Time Telemetry Dashboard:** A beautifully designed Farm Command Center featuring live weather forecasting, simulated satellite soil sensor data (N-P-K levels, moisture), and financial/yield analytics visualized with Recharts.
-* **💰 Smart Mandi Tracker:** An intelligent AI assistant that estimates wholesale market prices for specific crops in the user's localized region based on current agronomic trends.
-* **📚 Interactive Knowledge Hub:** A searchable, endless resource library. If a guide doesn't exist, the AI engine dynamically generates a perfectly formatted, step-by-step agricultural handbook on the fly.
-* **✅ Automated Task Manager:** A database-connected agronomic task scheduler that helps farmers track their sowing, fertilizing, and harvesting cycles.
-* **💬 Floating AI Assistant:** A persistent, context-aware chatbot available across the dashboard to answer quick questions about farming practices, loans, and weather.
-* **🔐 Secure Authentication:** Seamless Google OAuth login flow using NextAuth securely persisted in MongoDB.
+## Features & What We Built Together
+* **Kisaan Mitra AI helper:** Talk to the gemini based AI assistant for any queries related to farming. Supports many regional languages as well.
+* **AI Agriculture Scanner:** A unified camera and upload interface where farmers can snap photos of their crops. Powered by Gemini Multimodal AI, it detects diseases, pest infestations, and nutrient deficiencies, providing localized, actionable remedies.
+* **Real-Time Telemetry Dashboard:** A beautifully designed Farm Command Center featuring live weather forecasting, simulated satellite soil sensor data (N-P-K levels, moisture), and financial/yield analytics visualized with Recharts.
+* **Smart Mandi Tracker:** An intelligent AI assistant that estimates wholesale market prices for specific crops in the user's localized region based on current agronomic trends.
+* **Interactive Knowledge Hub:** A searchable, endless resource library. If a guide doesn't exist, the AI engine dynamically generates a perfectly formatted, step-by-step agricultural handbook on the fly.
+* **Automated Task Manager:** A database-connected agronomic task scheduler that helps farmers track their sowing, fertilizing, and harvesting cycles.
+* **Floating AI Assistant:** A persistent, context-aware chatbot available across the dashboard to answer quick questions about farming practices, loans, and weather.
+* **Secure Authentication:** Seamless Google OAuth login flow using NextAuth securely persisted in MongoDB.
 
 ---
 
-## 🛠️ Tech Stack & Packages
+## Tech Stack & Packages
 
 Built on the modern **Next.js 16 (App Router)** and **React 19** ecosystem. 
 
@@ -35,11 +35,11 @@ Built on the modern **Next.js 16 (App Router)** and **React 19** ecosystem.
 
 ---
 
-## 🚀 Setup Instructions
+## Setup Instructions
 
 Follow these steps to run the project locally on your machine:
 
-\`\`\`bash
+```bash
 # 1. Clone the repository
 git clone https://github.com/unclePRO/kisaan-mitra
 
@@ -59,13 +59,13 @@ npm install --legacy-peer-deps
 
 # 5. Start the development server
 npm run dev
-\`\`\`
+```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to see the application in action.
 
 ---
 
-## 🤝 The Team
+## The Team
 
 This ecosystem was built collaboratively by:
 
